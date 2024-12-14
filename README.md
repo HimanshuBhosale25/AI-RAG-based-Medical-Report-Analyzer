@@ -20,8 +20,8 @@ AI-powered insights.
 ## 🔧 **Tech Stack**
 - **Backend**: Built with **FastAPI** for efficient handling of requests and processing.
 - **AI Models**: Uses GPT-4o-mini for natural language understanding and content generation.
-- **RAG (Retrieval-Augmented Generation)**: Integrates data from medical reports and external research sources to provide enhanced insights.
-- **Frontend**: Beautiful, responsive UI powered by **HTML**, **CSS**, and JavaScript.
+- **RAG (Retrieval-Augmented Generation)**: Integrates data from medical reports , uses OPENAI text small embeddings and external research sources to provide enhanced insights.
+- **Frontend**: Beautiful, responsive UI powered by **HTML**, **CSS**, and **JavaScript**.
 
 ---
 
@@ -60,13 +60,14 @@ To get started with the **Generative AI Medical Report Analyzer**, follow these 
 
 ## 📸 **Screenshots**
 Here are some screenshots of the application in action:
-*Upload Report:-*
+
+*Upload your medical Report:-*
 ![Screenshot 1](images/Screenshot%202024-12-14%20052642.png)
 
 *Report Analysis:-*
 ![Screenshot 2](images/Screenshot%202024-12-14%20052711.png)
 
-*Health Recommendationds:-*
+*Health Recommendations:-*
 ![Screenshot 3](images/Screenshot%202024-12-14%20052749.png)
 
 *User Chatbot Query:-*
