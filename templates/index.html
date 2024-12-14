@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Report Analyzer</title>
+    <style>
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1d24; /* Darker background */
+            color: #cdd3de; /* Lighter text */
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #4fc3f7; /* Bright teal */
+        }
+
+        section {
+            margin-bottom: 30px;
+            background-color: #252931; /* Medium dark background */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            color: #5bbeca; /* Teal for headings */
+            margin-bottom: 15px;
+        }
+
+        .pdf-container {
+            display: flex;
+            align-items: flex-start; /* Align upload form and viewer at the top */
+            gap: 20px;
+        }
+
+        .upload-container {
+            flex: 1; /* Smaller space for the upload section */
+            max-width: 300px; /* Optional: Limit the width of the upload section */
+        }
+
+        .pdf-viewer-container {
+            flex: 2; /* More space for the PDF viewer */
+        }
+
+        #pdfViewer {
+            width: 100%;
+            height: 300px; /* Reduced height for compact layout */
+            border: 2px solid #cdd3de; /* Light border */
+            border-radius: 8px;
+        }
+
+        button {
+            background-color: #4fc3f7; /* Teal button */
+            color: #1a1d24; /* Dark text on button */
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #3ba4bf; /* Darker teal hover */
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 5px;
+            border: 1px solid #5a6473; /* Subtle dark border */
+            background-color: #2b3038; /* Darker input background */
+            color: #cdd3de; /* Lighter input text */
+        }
+
+        textarea {
+            height: 150px; /* Increased height for chatbot */
+        }
+
+        .result-content {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .chatbot-response-section, #result-section, #response-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Medical Report Analyzer</h1>
+        
+        <!-- Upload and PDF Viewer Section -->
+        <section>
+            <h3>📁 Upload and View Your Report</h3>
+            <div class="pdf-container">
+                <div class="upload-container">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <input type="file" id="pdfUpload" name="pdf" accept="application/pdf" required />
+                        <button type="submit">📤 Upload and Analyze</button>
+                    </form>
+                </div>
+                <div class="pdf-viewer-container">
+                    <iframe id="pdfViewer" src=""></iframe>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Results and Recommendations -->
+        <section id="result-section">
+            <h2>🔍 Analysis Results:-</h2>
+            <div id="summary" class="result-content"></div>
+            <br>
+            <h2>💡 Health Recommendations:-</h2>
+            <div id="recommendations" class="result-content"></div>
+        </section>
+        
+        <!-- Chatbot Section -->
+        <section>
+            <h2>🤖 Chat with the Bot</h2>
+            <textarea id="user-message" placeholder="Ask the bot a question..."></textarea>
+            <button onclick="submitChatbotMessage()">💬 Send</button>
+            <div class="chatbot-response-section">
+                <br>
+                <h3>🗨️ Chatbot Response:</h3>
+                <div id="chatbotResponse" class="result-content"></div>
+            </div>
+        </section>
+
+        <!-- Wellness Mode -->
+        <section>
+            <h2>🏋️‍♂️ Wellness Mode</h2>
+            <form id="wellnessForm">
+                <label for="age">🎂 Age:</label>
+                <input type="number" id="age" placeholder="Enter your age" required />
+                
+                <label for="weight">⚖️ Weight (kg):</label>
+                <input type="number" id="weight" placeholder="Enter your weight" required />
+                
+                <label for="lifestyle">🌟 Lifestyle:</label>
+                <select id="lifestyle">
+                    <option value="sedentary">Sedentary</option>
+                    <option value="active">Active</option>
+                    <option value="very_active">Very Active</option>
+                </select>
+
+                <label for="gender">⚧️ Gender:</label>
+                <select id="gender">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <button type="button" onclick="submitWellnessForm()">📈 Get Wellness Advice</button>
+            </form>
+        </section>
+        
+        <!-- Wellness Advice Display -->
+        <section id="response-section">
+            <h3>📝 Wellness Advice:</h3>
+            <div id="wellnessAdvice" class="result-content"></div>
+        </section>
+    </div>
+
+    <script>
+        let summaryContext = ""; // For chatbot context
+
+        // Handle file upload and display PDF
+        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append("pdf", document.getElementById("pdfUpload").files[0]);
+            
+            const response = await fetch("/analyze-report/", { method: "POST", body: formData });
+            const data = await response.json();
+
+            document.getElementById("summary").innerHTML = data.summary.replace(/\n/g, "<br>"); // Using <br> for new lines
+            document.getElementById("recommendations").innerHTML = data.health_recommendations.replace(/\n/g, "<br>"); // Proper formatting with <br> for new lines
+            summaryContext = data.summary;
+            document.getElementById("result-section").style.display = "block";
+
+            const fileUrl = URL.createObjectURL(document.getElementById("pdfUpload").files[0]);
+            document.getElementById("pdfViewer").src = fileUrl;
+        });
+
+        // Submit chatbot message
+        async function submitChatbotMessage() {
+            const userMessage = document.getElementById("user-message").value;
+
+            const response = await fetch("/chatbot/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_message: userMessage, context: summaryContext }),
+            });
+
+            const data = await response.json();
+            // Replace newline characters with <br> for proper display
+            document.getElementById("chatbotResponse").innerHTML = data.response.replace(/\n/g, "<br>");
+            document.querySelector(".chatbot-response-section").style.display = "block";
+        }
+
+        // Submit wellness form
+        async function submitWellnessForm() {
+            const age = document.getElementById("age").value;
+            const weight = document.getElementById("weight").value;
+            const lifestyle = document.getElementById("lifestyle").value;
+            const gender = document.getElementById("gender").value;
+
+            const response = await fetch("/wellness-mode/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ age, weight, lifestyle, gender }),
+            });
+
+            const data = await response.json();
+            // Use <br> to separate wellness advice points with new lines
+            document.getElementById("wellnessAdvice").innerHTML = data.wellness_advice.replace(/\n/g, "<br>");
+            document.getElementById("response-section").style.display = "block";
+        }
+    </script>
+</body>
+</html>
